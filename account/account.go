@@ -1,29 +1,36 @@
 package account
 
 import (
+	"encoding/json"
 	"errors"
-	"fmt"
 	"math/rand/v2"
 	"net/url"
 	"time"
+
+	"github.com/fatih/color"
 )
 
 var letterRunes = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890-*!")
 
 type Account struct {
-	login    string
-	password string
-	url      string
+	Login    string `json:"login"` 
+	Password string `json:"password"` 
+	Url      string `json:"url"` 
+	CreaterdAt time.Time `json:"createrdAt"` 
+	UpdatedAt  time.Time `json:"updatedAt"` 
 }
 
-type AccountWithTimeStamp struct {
-	createrdAt time.Time
-	updatedAt  time.Time
-	Account
+func (acc *Account) OutputPassword() {
+	color.Cyan(acc.Login)
 }
 
-func (acc Account) OutputPassword() {
-	fmt.Println(acc.login, acc.password, acc.url)
+func (acc *Account) ToBytes() ([]byte, error) {
+	//json.Marshal(v any) ([]byte, error)
+	file, err := json.Marshal(acc)
+	if err != nil {
+		return nil, err
+	}
+	return file, nil
 }
 
 func (acc *Account) generatePassword(n int) {
@@ -32,9 +39,9 @@ func (acc *Account) generatePassword(n int) {
 	for i := range rez {
 		rez[i] = letterRunes[rand.IntN(len(letterRunes))] // любой элемент от длинны заготовленных рун ()
 	}
-	acc.password = string(rez) // ничего не возвращаем так как это методи передали *
+	acc.Password = string(rez) // ничего не возвращаем так как это методи передали *
 }
-func NewAccountWithTimeStamp(login, password, urlString string) (*AccountWithTimeStamp, error) {
+func NewAccount(login, password, urlString string) (*Account, error) {
 
 	if login == "" {
 		return nil, errors.New("INVALID_LOGIN")
@@ -45,15 +52,12 @@ func NewAccountWithTimeStamp(login, password, urlString string) (*AccountWithTim
 		return nil, errors.New("INVALID_URL") // если запись не верна ничего не вернем и оибку
 	}
 
-	newAcc := &AccountWithTimeStamp{
-
-		createrdAt: time.Now(),
-		updatedAt:  time.Now(),
-		Account: Account{
-			login:    login,
-			password: password,
-			url:      urlString,
-		},
+	newAcc := &Account{
+		Login:    login,
+		Password: password,
+		Url:      urlString,
+		CreaterdAt: time.Now(),
+		UpdatedAt:  time.Now(),
 	}
 	if password == "" {
 		newAcc.generatePassword(12)
