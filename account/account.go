@@ -20,8 +20,10 @@ type Account struct {
 	UpdatedAt  time.Time `json:"updatedAt"` 
 }
 
-func (acc *Account) OutputPassword() {
+func (acc *Account) Output() {
 	color.Cyan(acc.Login)
+	color.Cyan(acc.Password)
+	color.Cyan(acc.Url)
 }
 
 func (acc *Account) ToBytes() ([]byte, error) {
@@ -42,7 +44,7 @@ func (acc *Account) generatePassword(n int) {
 	acc.Password = string(rez) // ничего не возвращаем так как это методи передали *
 }
 func NewAccount(login, password, urlString string) (*Account, error) {
-
+// валидация входящих данных
 	if login == "" {
 		return nil, errors.New("INVALID_LOGIN")
 	}
@@ -51,7 +53,7 @@ func NewAccount(login, password, urlString string) (*Account, error) {
 	if err != nil {
 		return nil, errors.New("INVALID_URL") // если запись не верна ничего не вернем и оибку
 	}
-
+// 
 	newAcc := &Account{
 		Login:    login,
 		Password: password,
