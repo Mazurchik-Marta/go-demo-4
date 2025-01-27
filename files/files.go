@@ -2,11 +2,10 @@ package files
 
 import (
 	"demo/password/output"
-	"fmt"
 	"os"
-
 	"github.com/fatih/color"
 )
+
 type JsonDB struct {
 	filename string
 }

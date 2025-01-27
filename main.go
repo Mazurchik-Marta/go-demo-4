@@ -5,41 +5,71 @@ import (
 	"demo/password/files"
 	"demo/password/output"
 	"fmt"
+	"strings"
 
 	"github.com/fatih/color"
 )
 
-func main() {
+var menu = map[string]func(*account.StorageWithDb){
+	"1": createAccount,
+	"2": findAccounByURL,
+	"3": findAccounByLogin,
+	"4": deleteAccount,
 
-	fmt.Println("__Менеджер паролей__")
-	// func account.NewStorage(db *files.JsonDB) *account.StorageWithDb
-	storage := account.NewStorage(files.NewJsonDB("data.Json"))
-	//storage := account.NewStorage(cloud.NewCloudDB("kloi")) - также можно Интерфейс.!
+}
 
-Menu:
-	for {
-		variant := promtData([]string{
-			"1. Создать аккаунт",
-			"2. Найти аккаунт по URL",
-			"3. Удалить аккаунт",
-			"4. Выход",
-			"Выберите вариант"})
-		switch variant {
-		case "1":
-			createAccount(storage)
-		case "2":
-			findAccoun(storage)
-		case "3":
-			deleteAccount(storage)
-		default:
-			break Menu
-		}
+var menuVariants = []string {
+	"1. Создать аккаунт",
+	"2. Найти аккаунт по URL",
+	"3. Найти аккаунт по имени",
+	"4. Удалить аккаунт",
+	"5. Выход",
+	"Выберите вариант",
+}
+
+func menuCounter() func() {
+	i := 1
+	return func() {
+		i ++
+		fmt.Println(i)
 	}
 }
 
-func findAccoun(stor *account.StorageWithDb) {
-	url := promtData([]string{"Введите URL для поиска"})
-	accounts := stor.FindAccountsByURL(url)
+func main() {
+	fmt.Println("__Менеджер паролей__")
+	storage := account.NewStorage(files.NewJsonDB("data.Json"))
+	//storage := account.NewStorage(cloud.NewCloudDB("kloi")) - также можно Интерфейс.!
+	counter := menuCounter() // четчик вызова меню
+	Menu:
+	for {
+		counter()
+		variant := promtData(menuVariants...)
+		menuFunc := menu[variant]
+		if menuFunc == nil { // проверка наличие ключа
+			break Menu
+		}
+		menuFunc(storage)
+	}
+}
+
+func findAccounByURL(stor *account.StorageWithDb) {
+	url := promtData("Введите URL для поиска")
+	accounts := stor.FindAccounts(url, func(a account.Account, s string) bool {
+		return strings.Contains(a.Url, s) // ананимная функция (которая уже вернула значение)
+	})
+	if len(accounts) == 0 {
+		color.Red("Аккаунтов не найдено")
+	}
+	for _, account := range accounts {
+		account.Output()
+	}
+}
+
+func findAccounByLogin(stor *account.StorageWithDb) {
+	login := promtData("Введите Логин для поиска")
+	accounts := stor.FindAccounts(login, func(a account.Account, s string) bool {
+		return strings.Contains(a.Login, s) // ананимная функция (которая уже вернула значение)
+	})
 	if len(accounts) == 0 {
 		color.Red("Аккаунтов не найдено")
 	}
@@ -49,9 +79,9 @@ func findAccoun(stor *account.StorageWithDb) {
 }
 
 func createAccount(stor *account.StorageWithDb) {
-	login := promtData([]string{"Введите логин"})
-	password := promtData([]string{"Введите пароль"})
-	url := promtData([]string{"Введите URL"})
+	login := promtData("Введите логин")
+	password := promtData("Введите пароль")
+	url := promtData("Введите URL")
 
 	myAccount, err := account.NewAccount(login, password, url)
 	if err != nil {
@@ -62,7 +92,7 @@ func createAccount(stor *account.StorageWithDb) {
 }
 
 func deleteAccount(stor *account.StorageWithDb) {
-	url := promtData([]string{"Введите URL для удаления"})
+	url := promtData("Введите URL для удаления")
 	isDeleted := stor.DelAccountsByURL(url)
 	if isDeleted {
 		color.Green("Удалено")
@@ -71,10 +101,10 @@ func deleteAccount(stor *account.StorageWithDb) {
 	}
 }
 
-func promtData[T any](promt []T) string {
+func promtData(promt ...string) string { 
 	for i, line := range promt {
-		if i == len(promt) - 1 {
-			fmt.Printf(" %v: ",line)
+		if i == len(promt)-1 {
+			fmt.Printf(" %v: ", line)
 		} else {
 			fmt.Println(line)
 		}

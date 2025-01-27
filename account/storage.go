@@ -30,7 +30,7 @@ type StorageWithDb struct {
 	db Db // интерфейс
 }
 
-func NewStorage(db Db) *StorageWithDb {
+func NewStorage(db Db) *StorageWithDb { // передаем бд
 	file, err := db.Read()
 	if err != nil {
 		return &StorageWithDb{
@@ -42,7 +42,6 @@ func NewStorage(db Db) *StorageWithDb {
 		}
 	}
 	var storage Storage
-	//func json.Unmarshal(data []byte, v any) error
 	err = json.Unmarshal(file, &storage) // наполнение через указатель
 	if err != nil {
 		output.PrintError("Не удалось преобразовать")
@@ -65,12 +64,12 @@ func (stor *StorageWithDb) AddAccount(acc Account) {
 	stor.save()
 }
 
-func (stor *StorageWithDb) FindAccountsByURL(url string) []Account {
+// Метод Принемает функцию
+func (stor *StorageWithDb) FindAccounts(str string, checker func(Account, string) bool) []Account {
 	var accounts []Account
-
 	for _, account := range stor.Accounts {
 		//Contains(s string, substr string) bool
-		isMatched := strings.Contains(account.Url, url)
+		isMatched := checker(account, str) // если нашел возвращает слайс аккаунтов.
 		if isMatched {
 			accounts = append(accounts, account)
 		}
@@ -78,10 +77,21 @@ func (stor *StorageWithDb) FindAccountsByURL(url string) []Account {
 	return accounts
 }
 
+/*
+type StorageWithDb struct {
+    Storage
+    db Db // интерфейс
+}
+// Embedded fields:
+Accounts  []Account // through Storage
+UpdatedAt time.Time // through Storage
+
+*/
+
 func (stor *StorageWithDb) DelAccountsByURL(url string) bool {
 	var accounts []Account
 	isDeleted := false
-	for _, account := range stor.Accounts {
+	for _, account := range stor.Accounts { // stor.Accounts
 		isMatched := strings.Contains(account.Url, url)
 		if !isMatched {
 			accounts = append(accounts, account)
@@ -89,6 +99,7 @@ func (stor *StorageWithDb) DelAccountsByURL(url string) bool {
 		}
 		isDeleted = true
 	}
+	stor.Accounts = accounts //
 	stor.save()
 	return isDeleted
 }
@@ -108,6 +119,5 @@ func (stor *StorageWithDb) save() {
 	if err != nil {
 		output.PrintError(err)
 	}
-	// создаем базу
 	stor.db.Write(data)
 }
