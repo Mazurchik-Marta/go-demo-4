@@ -2,12 +2,14 @@ package main
 
 import (
 	"demo/password/account"
+	"demo/password/crypter"
 	"demo/password/files"
 	"demo/password/output"
 	"fmt"
 	"strings"
 
 	"github.com/fatih/color"
+	"github.com/joho/godotenv"
 )
 
 var menu = map[string]func(*account.StorageWithDb){
@@ -15,10 +17,9 @@ var menu = map[string]func(*account.StorageWithDb){
 	"2": findAccounByURL,
 	"3": findAccounByLogin,
 	"4": deleteAccount,
-
 }
 
-var menuVariants = []string {
+var menuVariants = []string{
 	"1. Создать аккаунт",
 	"2. Найти аккаунт по URL",
 	"3. Найти аккаунт по имени",
@@ -27,22 +28,30 @@ var menuVariants = []string {
 	"Выберите вариант",
 }
 
-func menuCounter() func() {
-	i := 1
-	return func() {
-		i ++
+// Замыкание
+func menuCounter() func() { // возвращаем аннаним фу
+	i := 0
+	return func() { // ананим фу
+		i++
 		fmt.Println(i)
 	}
 }
 
 func main() {
 	fmt.Println("__Менеджер паролей__")
-	storage := account.NewStorage(files.NewJsonDB("data.Json"))
+	//-----
+	// для крипты
+	err := godotenv.Load()
+	if err != nil {
+		output.PrintError("Не удалось найти env. файл")
+	}
+	//---------------------
+	storage := account.NewStorage(files.NewJsonDB("data.storage"), *crypter.NewEncrypter())
 	//storage := account.NewStorage(cloud.NewCloudDB("kloi")) - также можно Интерфейс.!
-	counter := menuCounter() // четчик вызова меню
-	Menu:
+	counter := menuCounter() //cчетчик вызова меню
+Menu:
 	for {
-		counter()
+		counter() // вызов счетчика
 		variant := promtData(menuVariants...)
 		menuFunc := menu[variant]
 		if menuFunc == nil { // проверка наличие ключа
@@ -101,7 +110,7 @@ func deleteAccount(stor *account.StorageWithDb) {
 	}
 }
 
-func promtData(promt ...string) string { 
+func promtData(promt ...string) string {
 	for i, line := range promt {
 		if i == len(promt)-1 {
 			fmt.Printf(" %v: ", line)

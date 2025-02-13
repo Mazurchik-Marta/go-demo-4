@@ -1,10 +1,14 @@
 package account
 
 import (
+	"demo/password/crypter"
 	"demo/password/output"
+
 	"encoding/json"
 	"strings"
 	"time"
+
+	"github.com/fatih/color"
 )
 
 type ByteReader interface {
@@ -27,10 +31,11 @@ type Storage struct {
 }
 type StorageWithDb struct {
 	Storage
-	db Db // интерфейс
+	db  Db // интерфейс
+	enc crypter.Encrypter
 }
 
-func NewStorage(db Db) *StorageWithDb { // передаем бд
+func NewStorage(db Db, enc crypter.Encrypter) *StorageWithDb { // передаем бд
 	file, err := db.Read()
 	if err != nil {
 		return &StorageWithDb{
@@ -38,24 +43,29 @@ func NewStorage(db Db) *StorageWithDb { // передаем бд
 				Accounts:  []Account{},
 				UpdatedAt: time.Now(),
 			},
-			db: db,
+			db:  db,
+			enc: enc,
 		}
 	}
+	data := enc.Decrypt(file)
 	var storage Storage
-	err = json.Unmarshal(file, &storage) // наполнение через указатель
+	err = json.Unmarshal(data, &storage) // наполнение через указатель
+	color.Cyan("Найдено %d аккаунтов", len(storage.Accounts))
 	if err != nil {
-		output.PrintError("Не удалось преобразовать")
+		output.PrintError("Не удалось преобразовать data.storage")
 		return &StorageWithDb{
 			Storage: Storage{
 				Accounts:  []Account{},
 				UpdatedAt: time.Now(),
 			},
-			db: db,
+			db:  db,
+			enc: enc,
 		}
 	}
 	return &StorageWithDb{
 		Storage: storage, // конструировать из исходных данных
 		db:      db,
+		enc:     enc,
 	}
 }
 
@@ -99,7 +109,7 @@ func (stor *StorageWithDb) DelAccountsByURL(url string) bool {
 		}
 		isDeleted = true
 	}
-	stor.Accounts = accounts //
+	stor.Accounts = accounts // Исправление. Сохраняем только Accounts
 	stor.save()
 	return isDeleted
 }
@@ -116,8 +126,10 @@ func (stor *Storage) ToBytes() ([]byte, error) { // остается тольк�
 func (stor *StorageWithDb) save() {
 	stor.UpdatedAt = time.Now()
 	data, err := stor.Storage.ToBytes()
+
+	encData := stor.enc.Encrypt(data)
 	if err != nil {
 		output.PrintError(err)
 	}
-	stor.db.Write(data)
+	stor.db.Write(encData)
 }
