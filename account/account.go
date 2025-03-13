@@ -13,11 +13,11 @@ import (
 var letterRunes = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890-*!")
 
 type Account struct {
-	Login    string `json:"login"` 
-	Password string `json:"password"` 
-	Url      string `json:"url"` 
-	CreaterdAt time.Time `json:"createrdAt"` 
-	UpdatedAt  time.Time `json:"updatedAt"` 
+	Login      string    `json:"login"`
+	Password   string    `json:"password"`
+	Url        string    `json:"url"`
+	CreaterdAt time.Time `json:"createrdAt"`
+	UpdatedAt  time.Time `json:"updatedAt"`
 }
 
 func (acc *Account) Output() {
@@ -27,7 +27,6 @@ func (acc *Account) Output() {
 }
 
 func (acc *Account) ToBytes() ([]byte, error) {
-	//json.Marshal(v any) ([]byte, error)
 	file, err := json.Marshal(acc)
 	if err != nil {
 		return nil, err
@@ -37,27 +36,25 @@ func (acc *Account) ToBytes() ([]byte, error) {
 
 func (acc *Account) generatePassword(n int) {
 
-	rez := make([]rune, n) // итоговый массив (предслайс рун)
+	rez := make([]rune, n)
 	for i := range rez {
-		rez[i] = letterRunes[rand.IntN(len(letterRunes))] // любой элемент от длинны заготовленных рун ()
+		rez[i] = letterRunes[rand.IntN(len(letterRunes))]
 	}
-	acc.Password = string(rez) // ничего не возвращаем так как это методи передали *
+	acc.Password = string(rez)
 }
 func NewAccount(login, password, urlString string) (*Account, error) {
-// валидация входящих данных
 	if login == "" {
 		return nil, errors.New("INVALID_LOGIN")
 	}
-	// ParseRequestURI(rawURL string)(*url.URL, error)
 	_, err := url.ParseRequestURI(urlString)
 	if err != nil {
-		return nil, errors.New("INVALID_URL") // если запись не верна ничего не вернем и оибку
+		return nil, errors.New("INVALID_URL")
 	}
-// 
+
 	newAcc := &Account{
-		Login:    login,
-		Password: password,
-		Url:      urlString,
+		Login:      login,
+		Password:   password,
+		Url:        urlString,
 		CreaterdAt: time.Now(),
 		UpdatedAt:  time.Now(),
 	}

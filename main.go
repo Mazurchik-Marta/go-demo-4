@@ -28,10 +28,9 @@ var menuVariants = []string{
 	"Выберите вариант",
 }
 
-// Замыкание
-func menuCounter() func() { // возвращаем аннаним фу
+func menuCounter() func() {
 	i := 0
-	return func() { // ананим фу
+	return func() {
 		i++
 		fmt.Println(i)
 	}
@@ -39,22 +38,19 @@ func menuCounter() func() { // возвращаем аннаним фу
 
 func main() {
 	fmt.Println("__Менеджер паролей__")
-	//-----
-	// для крипты
+
 	err := godotenv.Load()
 	if err != nil {
 		output.PrintError("Не удалось найти env. файл")
 	}
-	//---------------------
 	storage := account.NewStorage(files.NewJsonDB("data.storage"), *crypter.NewEncrypter())
-	//storage := account.NewStorage(cloud.NewCloudDB("kloi")) - также можно Интерфейс.!
-	counter := menuCounter() //cчетчик вызова меню
+	counter := menuCounter()
 Menu:
 	for {
-		counter() // вызов счетчика
+		counter()
 		variant := promtData(menuVariants...)
 		menuFunc := menu[variant]
-		if menuFunc == nil { // проверка наличие ключа
+		if menuFunc == nil {
 			break Menu
 		}
 		menuFunc(storage)
@@ -64,7 +60,7 @@ Menu:
 func findAccounByURL(stor *account.StorageWithDb) {
 	url := promtData("Введите URL для поиска")
 	accounts := stor.FindAccounts(url, func(a account.Account, s string) bool {
-		return strings.Contains(a.Url, s) // ананимная функция (которая уже вернула значение)
+		return strings.Contains(a.Url, s)
 	})
 	if len(accounts) == 0 {
 		color.Red("Аккаунтов не найдено")
@@ -77,7 +73,7 @@ func findAccounByURL(stor *account.StorageWithDb) {
 func findAccounByLogin(stor *account.StorageWithDb) {
 	login := promtData("Введите Логин для поиска")
 	accounts := stor.FindAccounts(login, func(a account.Account, s string) bool {
-		return strings.Contains(a.Login, s) // ананимная функция (которая уже вернула значение)
+		return strings.Contains(a.Login, s)
 	})
 	if len(accounts) == 0 {
 		color.Red("Аккаунтов не найдено")

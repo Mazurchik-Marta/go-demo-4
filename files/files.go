@@ -12,12 +12,11 @@ type JsonDB struct {
 
 func NewJsonDB(name string) *JsonDB {
 	return &JsonDB{
-		filename: name, // имя файла
+		filename: name, 
 	}
 }
 
-func (db *JsonDB) Read() ([]byte, error) { // ает из базы
-	//os.ReadFile(name string) ([]byte, error)
+func (db *JsonDB) Read() ([]byte, error) { 
 	date, err := os.ReadFile(db.filename)
 	if err != nil {
 		return nil, err
@@ -25,7 +24,7 @@ func (db *JsonDB) Read() ([]byte, error) { // ает из базы
 	return date, err
 }
 
-func (db *JsonDB) Write(content []byte) { // записывает в базу
+func (db *JsonDB) Write(content []byte) { 
 	file, err := os.Create(db.filename)
 	if err != nil {
 		output.PrintError(err)

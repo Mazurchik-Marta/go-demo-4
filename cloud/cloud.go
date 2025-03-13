@@ -10,11 +10,11 @@ func NewCloudDB(url string) *CloudDBb {
 	}
 }
 
-func (db *CloudDBb) Read() ([]byte, error) { // ает из базы
+func (db *CloudDBb) Read() ([]byte, error) { 
 	return []byte{}, nil
 }
 
-func (db *CloudDBb) Write(content []byte) { // записывает в базу
+func (db *CloudDBb) Write(content []byte) { 
 
 
 }

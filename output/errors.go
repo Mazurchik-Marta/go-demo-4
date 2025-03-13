@@ -5,7 +5,6 @@ import (
 )
 
 func PrintError(value any) {
-	// или ок натация
 	switch t := value.(type) {
 	case string:
 		color.Red(t)

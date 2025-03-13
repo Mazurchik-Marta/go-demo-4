@@ -25,17 +25,16 @@ type Db interface {
 }
 
 type Storage struct {
-	// последняя запись как обновлялся
 	Accounts  []Account `json:"accounts"`
 	UpdatedAt time.Time `json:"updatedAt"`
 }
 type StorageWithDb struct {
 	Storage
-	db  Db // интерфейс
+	db  Db // interface
 	enc crypter.Encrypter
 }
 
-func NewStorage(db Db, enc crypter.Encrypter) *StorageWithDb { // передаем бд
+func NewStorage(db Db, enc crypter.Encrypter) *StorageWithDb {
 	file, err := db.Read()
 	if err != nil {
 		return &StorageWithDb{
@@ -49,7 +48,7 @@ func NewStorage(db Db, enc crypter.Encrypter) *StorageWithDb { // передае
 	}
 	data := enc.Decrypt(file)
 	var storage Storage
-	err = json.Unmarshal(data, &storage) // наполнение через указатель
+	err = json.Unmarshal(data, &storage)
 	color.Cyan("Найдено %d аккаунтов", len(storage.Accounts))
 	if err != nil {
 		output.PrintError("Не удалось преобразовать data.storage")
@@ -63,7 +62,7 @@ func NewStorage(db Db, enc crypter.Encrypter) *StorageWithDb { // передае
 		}
 	}
 	return &StorageWithDb{
-		Storage: storage, // конструировать из исходных данных
+		Storage: storage, 
 		db:      db,
 		enc:     enc,
 	}
@@ -74,12 +73,10 @@ func (stor *StorageWithDb) AddAccount(acc Account) {
 	stor.save()
 }
 
-// Метод Принемает функцию
 func (stor *StorageWithDb) FindAccounts(str string, checker func(Account, string) bool) []Account {
 	var accounts []Account
 	for _, account := range stor.Accounts {
-		//Contains(s string, substr string) bool
-		isMatched := checker(account, str) // если нашел возвращает слайс аккаунтов.
+		isMatched := checker(account, str) 
 		if isMatched {
 			accounts = append(accounts, account)
 		}
@@ -87,21 +84,10 @@ func (stor *StorageWithDb) FindAccounts(str string, checker func(Account, string
 	return accounts
 }
 
-/*
-type StorageWithDb struct {
-    Storage
-    db Db // интерфейс
-}
-// Embedded fields:
-Accounts  []Account // through Storage
-UpdatedAt time.Time // through Storage
-
-*/
-
 func (stor *StorageWithDb) DelAccountsByURL(url string) bool {
 	var accounts []Account
 	isDeleted := false
-	for _, account := range stor.Accounts { // stor.Accounts
+	for _, account := range stor.Accounts { 
 		isMatched := strings.Contains(account.Url, url)
 		if !isMatched {
 			accounts = append(accounts, account)
@@ -109,13 +95,12 @@ func (stor *StorageWithDb) DelAccountsByURL(url string) bool {
 		}
 		isDeleted = true
 	}
-	stor.Accounts = accounts // Исправление. Сохраняем только Accounts
+	stor.Accounts = accounts 
 	stor.save()
 	return isDeleted
 }
 
-func (stor *Storage) ToBytes() ([]byte, error) { // остается только с Storage наче при сохранении весь ДБ
-	//json.Marshal(v any) ([]byte, error)
+func (stor *Storage) ToBytes() ([]byte, error) {
 	file, err := json.Marshal(stor)
 	if err != nil {
 		return nil, err
